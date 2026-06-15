@@ -68,6 +68,61 @@
 
     </LinearLayout>
 
+    <!-- ページナビゲーションバー（デフォルトで非表示） -->
+    <LinearLayout
+        android:id="@+id/pageBar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:padding="4dp"
+        android:gravity="center_vertical"
+        android:background="?attr/colorSurfaceVariant"
+        android:visibility="gone">
+
+        <EditText
+            android:id="@+id/pageInput"
+            android:layout_width="56dp"
+            android:layout_height="wrap_content"
+            android:inputType="number"
+            android:imeOptions="actionGo"
+            android:singleLine="true"
+            android:gravity="center"
+            android:background="@null"
+            android:textSize="16sp"
+            android:paddingHorizontal="4dp" />
+
+        <TextView
+            android:id="@+id/pageCountText"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textSize="14sp"
+            android:paddingEnd="4dp" />
+
+        <View
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:layout_weight="1" />
+
+        <ImageButton
+            android:id="@+id/prevPageButton"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:src="@drawable/ic_arrow_up"
+            android:contentDescription="@string/prev_page"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:enabled="false" />
+
+        <ImageButton
+            android:id="@+id/nextPageButton"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:src="@drawable/ic_arrow_down"
+            android:contentDescription="@string/next_page"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:enabled="false" />
+
+    </LinearLayout>
+
     <!-- PDFページ一覧（縦スクロール専用） -->
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/pdfRecyclerView"

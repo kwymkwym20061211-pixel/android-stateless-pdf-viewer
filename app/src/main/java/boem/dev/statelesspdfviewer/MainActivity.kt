@@ -13,6 +13,7 @@ import android.view.View
 import android.view.inputmethod.EditorInfo
 import android.view.inputmethod.InputMethodManager
 import androidx.appcompat.app.AppCompatActivity
+import androidx.appcompat.widget.PopupMenu
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import boem.dev.statelesspdfviewer.databinding.ActivityMainBinding
@@ -36,6 +37,8 @@ class MainActivity : AppCompatActivity() {
     private var searchResults: List<Int> = emptyList()
     private var currentResultIndex = -1
 
+    private var currentPage = 0
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityMainBinding.inflate(layoutInflater)
@@ -47,6 +50,7 @@ class MainActivity : AppCompatActivity() {
 
         setupRecyclerView()
         setupSearchBar()
+        setupPageBar()
         openPdfFromIntent()
     }
 
@@ -79,6 +83,25 @@ class MainActivity : AppCompatActivity() {
 
         binding.prevButton.setOnClickListener { navigateResult(-1) }
         binding.nextButton.setOnClickListener { navigateResult(+1) }
+    }
+
+    private fun setupPageBar() {
+        binding.pageInput.setOnEditorActionListener { _, actionId, event ->
+            val triggered = actionId == EditorInfo.IME_ACTION_GO
+                    || actionId == EditorInfo.IME_ACTION_DONE
+                    || (event?.keyCode == KeyEvent.KEYCODE_ENTER
+                            && event.action == KeyEvent.ACTION_DOWN)
+            if (triggered) {
+                goToPage(binding.pageInput.text?.toString().orEmpty())
+                hideKeyboard()
+                true
+            } else {
+                false
+            }
+        }
+
+        binding.prevPageButton.setOnClickListener { navigatePage(-1) }
+        binding.nextPageButton.setOnClickListener { navigatePage(+1) }
     }
 
     private fun openPdfFromIntent() {
@@ -126,25 +149,29 @@ class MainActivity : AppCompatActivity() {
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
-        return when (item.itemId) {
-            R.id.action_search -> {
-                toggleSearchBar()
-                true
+        if (item.itemId != R.id.action_menu) return super.onOptionsItemSelected(item)
+
+        val anchor = binding.toolbar.findViewById<View>(R.id.action_menu) ?: binding.toolbar
+        val popup = PopupMenu(this, anchor)
+        popup.menuInflater.inflate(R.menu.popup_menu, popup.menu)
+        popup.setOnMenuItemClickListener { menuItem ->
+            when (menuItem.itemId) {
+                R.id.menu_search -> { openSearchBar(); true }
+                R.id.menu_page -> { openPageBar(); true }
+                else -> false
             }
-            else -> super.onOptionsItemSelected(item)
         }
+        popup.show()
+        return true
     }
 
-    // ──────── 検索バーの表示・非表示 ────────
+    // ──────── 検索バー ────────
 
-    private fun toggleSearchBar() {
-        if (binding.searchBar.visibility == View.VISIBLE) {
-            closeSearchBar()
-        } else {
-            binding.searchBar.visibility = View.VISIBLE
-            binding.searchInput.requestFocus()
-            showKeyboard(binding.searchInput)
-        }
+    private fun openSearchBar() {
+        if (binding.pageBar.visibility == View.VISIBLE) closePageBar()
+        binding.searchBar.visibility = View.VISIBLE
+        binding.searchInput.requestFocus()
+        showKeyboard(binding.searchInput)
     }
 
     private fun closeSearchBar() {
@@ -152,6 +179,51 @@ class MainActivity : AppCompatActivity() {
         binding.searchInput.text?.clear()
         clearSearchState()
         hideKeyboard()
+    }
+
+    // ──────── ページナビゲーションバー ────────
+
+    private fun openPageBar() {
+        if (binding.searchBar.visibility == View.VISIBLE) closeSearchBar()
+        binding.pageBar.visibility = View.VISIBLE
+        val lm = binding.pdfRecyclerView.layoutManager as? LinearLayoutManager
+        currentPage = lm?.findFirstVisibleItemPosition()?.coerceAtLeast(0) ?: 0
+        refreshPageUI()
+        binding.pageInput.requestFocus()
+        binding.pageInput.selectAll()
+        showKeyboard(binding.pageInput)
+    }
+
+    private fun closePageBar() {
+        binding.pageBar.visibility = View.GONE
+        binding.pageInput.text?.clear()
+        hideKeyboard()
+    }
+
+    private fun navigatePage(direction: Int) {
+        val pageCount = pdfRenderer?.pageCount ?: return
+        val lm = binding.pdfRecyclerView.layoutManager as? LinearLayoutManager ?: return
+        currentPage = lm.findFirstVisibleItemPosition().coerceAtLeast(0)
+        currentPage = (currentPage + direction).coerceIn(0, pageCount - 1)
+        scrollToPage(currentPage)
+        refreshPageUI()
+    }
+
+    private fun goToPage(input: String) {
+        val pageCount = pdfRenderer?.pageCount ?: return
+        val pageNumber = input.toIntOrNull() ?: return
+        currentPage = (pageNumber - 1).coerceIn(0, pageCount - 1)
+        scrollToPage(currentPage)
+        refreshPageUI()
+    }
+
+    private fun refreshPageUI() {
+        val pageCount = pdfRenderer?.pageCount ?: 0
+        binding.pageCountText.text = getString(R.string.page_of_total, pageCount)
+        binding.pageInput.setText((currentPage + 1).toString())
+        binding.pageInput.setSelection(binding.pageInput.text?.length ?: 0)
+        binding.prevPageButton.isEnabled = currentPage > 0
+        binding.nextPageButton.isEnabled = currentPage < pageCount - 1
     }
 
     // ──────── テキスト検索 ────────
@@ -261,7 +333,6 @@ class MainActivity : AppCompatActivity() {
 
     override fun onPause() {
         super.onPause()
-        // バックグラウンドに移った時点でキャッシュを削除
         purgeAllCaches()
     }
 
@@ -269,7 +340,6 @@ class MainActivity : AppCompatActivity() {
         super.onDestroy()
         searchJob?.cancel()
         pageAdapter.release()
-        // PdfRenderer → ParcelFileDescriptor の順でクローズ
         pdfRenderer?.close()
         pdfRenderer = null
         fileDescriptor?.close()

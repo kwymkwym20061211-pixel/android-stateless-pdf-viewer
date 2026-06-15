@@ -11,7 +11,10 @@
       "Bash(sudo tee /etc/udev/rules.d/51-android.rules)",
       "Bash(sudo chmod a+r /etc/udev/rules.d/51-android.rules)",
       "Bash(sudo udevadm control --reload-rules)",
-      "Bash(sudo udevadm trigger)"
+      "Bash(sudo udevadm trigger)",
+      "Bash(ls /home/user/dev/*.jks 2>/dev/null)",
+      "Read(//home/user/dev/**)",
+      "Bash(keytool -list -keystore /home/user/dev/android-stateless-pdf-viewer.jks -storepass qareitijo)"
     ]
   }
 }

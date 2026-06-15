@@ -4,6 +4,9 @@
     <string name="search_hint">検索キーワードを入力…</string>
     <string name="prev_result">前の結果</string>
     <string name="next_result">次の結果</string>
+    <string name="prev_page">前のページ</string>
+    <string name="next_page">次のページ</string>
+    <string name="page_of_total">/ %d</string>
     <string name="no_results">見つかりません</string>
     <string name="searching">検索中…</string>
     <string name="result_format">%1$d / %2$d ページ</string>
