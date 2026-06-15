@@ -18,6 +18,26 @@ echo -e "d\nn" | bash build_android.sh
 
 ---
 
+## リリースビルドと署名
+
+### 署名設定ファイル（gitignore済み）
+- `keystore.properties` - パスワード・エイリアス記載（コミット不可）
+- `android-stateless-pdf-viewer.jks` - キーストア本体（コミット不可）
+  - エイリアス: `my-key-alias`
+  - `keystore.properties` の `storeFile` は rootProject 基準の相対パスで記載
+
+### リリースビルド
+```bash
+echo -e "r\nn" | bash build_android.sh
+```
+出力先: `app/build/outputs/apk/release/app-release.apk`
+
+### 注意
+- debugビルドのAPKが端末に入っている状態でリリースビルドをインストールしようとすると `INSTALL_FAILED_UPDATE_INCOMPATIBLE` エラーが出る
+- 一度アンインストールしてから入れ直す: `adb uninstall boem.dev.statelesspdfviewer`
+
+---
+
 ## 実装済み内容
 
 ### アーキテクチャ
@@ -30,10 +50,43 @@ echo -e "d\nn" | bash build_android.sh
 
 ### ファイル構成
 
-- `MainActivity.kt` - PDF読み込み、検索UI、ライフサイクル管理
+- `MainActivity.kt` - PDF読み込み、メニュー、検索・ページナビ UI、ライフサイクル管理
 - `PdfPageAdapter.kt` - RecyclerViewアダプター。ページをビットマップとしてレンダリング
-- `res/layout/activity_main.xml` - ツールバー＋検索バー＋RecyclerView
+- `res/layout/activity_main.xml` - ツールバー＋検索バー＋ページバー＋RecyclerView
 - `res/layout/item_pdf_page.xml` - 1ページ分のViewHolder
+- `res/menu/main_menu.xml` - ハンバーガーアイコン（`ic_menu`）1つ
+- `res/menu/popup_menu.xml` - ポップアップの Search / Page 項目
+
+### メニュー構造
+
+ツールバー右上のハンバーガーアイコン（三本線）を押すとポップアップが出る：
+- **Search** → テキスト検索バーを開く（PageバーはClose）
+- **Page** → ページナビゲーションバーを開く（SearchバーはClose）
+
+### テキスト検索バー
+
+- pdfbox-androidでページごとにテキスト抽出し、キーワードを含むページ番号リストを返す
+- 前/次ボタンで該当ページに `LinearLayoutManager.scrollToPositionWithOffset()` でジャンプ
+- 検索結果カウント表示（例: `1 / 3 ページ`）、前/次ボタンの有効/無効も連動
+- 検索トリガー: `IME_ACTION_SEARCH` / `IME_ACTION_DONE` / Enterキーすべて対応
+- 検索はIOスレッドで実行、キャンセル可能（`Job`管理）
+
+### ページナビゲーションバー
+
+- 左側: ページ番号入力欄（数字入力→Enterで直接ジャンプ）
+- 右側: `/ 42` のような総ページ数表示
+- 上下矢印ボタンで1ページずつ移動（ボタン押下時に現在表示位置を取得して基準にする）
+
+### スクロール余白
+
+RecyclerViewの下部に `画面高さ / 3` のpaddingを追加（`clipToPadding=false`）。
+最終ページが見切れないようにするため。
+
+### アプリアイコン
+
+ベクタ画像（`ic_launcher_foreground.xml` / `ic_launcher_background.xml`）。
+- 背景: 濃いインディゴ（`#1A237E`）
+- 前景: 白いドキュメント（右上折り返し角）＋グレーのテキスト行＋ゴールドの虫眼鏡
 
 ### 外部アプリからの呼び出し
 
@@ -47,14 +100,6 @@ echo -e "d\nn" | bash build_android.sh
 - `onPause()` で `cacheDir` / `externalCacheDir` を全削除
 - `onDestroy()` で `PdfRenderer` と `ParcelFileDescriptor` をクローズ
 - `SharedPreferences` は一切使用しない
-
-### 検索機能
-
-- ツールバーの虫眼鏡アイコンで検索バーを表示/非表示
-- pdfbox-androidでページごとにテキスト抽出し、キーワードを含むページ番号リストを返す
-- 前/次ボタンで該当ページに `LinearLayoutManager.scrollToPositionWithOffset()` でジャンプ
-- 検索結果カウント表示（例: `1 / 3 ページ`）、前/次ボタンの有効/無効も連動
-- 検索はIOスレッドで実行、キャンセル可能（`Job`管理）
 
 ### 既知の制限
 
