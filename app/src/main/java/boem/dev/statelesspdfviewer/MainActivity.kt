@@ -6,6 +6,7 @@ import android.net.Uri
 import android.os.Bundle
 import android.os.ParcelFileDescriptor
 import android.provider.OpenableColumns
+import android.view.KeyEvent
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
@@ -60,8 +61,12 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun setupSearchBar() {
-        binding.searchInput.setOnEditorActionListener { _, actionId, _ ->
-            if (actionId == EditorInfo.IME_ACTION_SEARCH) {
+        binding.searchInput.setOnEditorActionListener { _, actionId, event ->
+            val triggered = actionId == EditorInfo.IME_ACTION_SEARCH
+                    || actionId == EditorInfo.IME_ACTION_DONE
+                    || (event?.keyCode == KeyEvent.KEYCODE_ENTER
+                            && event.action == KeyEvent.ACTION_DOWN)
+            if (triggered) {
                 startSearch(binding.searchInput.text?.toString().orEmpty())
                 hideKeyboard()
                 true
@@ -170,7 +175,7 @@ class MainActivity : AppCompatActivity() {
             refreshSearchUI()
 
             if (results.isNotEmpty()) {
-                binding.pdfRecyclerView.smoothScrollToPosition(results[0])
+                scrollToPage(results[0])
             }
         }
     }
@@ -197,13 +202,20 @@ class MainActivity : AppCompatActivity() {
         if (searchResults.isEmpty()) return
         currentResultIndex = (currentResultIndex + direction).coerceIn(0, searchResults.size - 1)
         refreshSearchUI()
-        binding.pdfRecyclerView.smoothScrollToPosition(searchResults[currentResultIndex])
+        scrollToPage(searchResults[currentResultIndex])
+    }
+
+    private fun scrollToPage(pageIndex: Int) {
+        (binding.pdfRecyclerView.layoutManager as? LinearLayoutManager)
+            ?.scrollToPositionWithOffset(pageIndex, 0)
     }
 
     private fun clearSearchState() {
         searchResults = emptyList()
         currentResultIndex = -1
-        refreshSearchUI()
+        binding.searchResultCount.text = ""
+        binding.prevButton.isEnabled = false
+        binding.nextButton.isEnabled = false
     }
 
     private fun refreshSearchUI() {
