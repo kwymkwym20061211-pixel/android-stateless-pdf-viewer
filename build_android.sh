@@ -1,10 +1,6 @@
 #!/bin/bash
 # android向けビルドスクリプト。debug/release/cancelを選択し、オプションでインストールも行う。
 
-NDK_PATH="/home/user/android-sdk/ndk/28.2.13676358"
-LIB_NAME="libclang_rt.asan-aarch64-android.so"
-DEST="app/src/main/jniLibs/arm64-v8a"
-
 while true; do
     read -p "debug?release?cancel?(d/r/c) " choice
     case "$choice" in
@@ -14,25 +10,17 @@ while true; do
     esac
 done
 
-./gen_cmakelists.sh
-
 if [ "$choice" = "d" ]; then
-    #echo "Starting ASan lib sync."
-    #mkdir -p "$DEST"
-    #find "$NDK_PATH" -name "$LIB_NAME" -exec cp {} "$DEST/" \;
-    #echo "ASan library synced."
-    #echo "Building Debug APK..."
+    echo "Building Debug APK..."
     GRADLE_TASK="assembleDebug"
-    #GRADLE_OPTS="-PuseAsan=true"
     BUILD_TYPE="debug"
 else
     echo "Building Release APK..."
     GRADLE_TASK="assembleRelease"
-    GRADLE_OPTS=""
     BUILD_TYPE="release"
 fi
 
-if ! ./gradlew "$GRADLE_TASK" $GRADLE_OPTS; then
+if ! ./gradlew "$GRADLE_TASK"; then
     echo "Error: Build failed."
     exit 1
 fi

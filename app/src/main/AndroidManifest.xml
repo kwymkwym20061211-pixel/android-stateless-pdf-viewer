@@ -3,23 +3,52 @@
     xmlns:tools="http://schemas.android.com/tools">
 
     <application
-        android:allowBackup="true"
-        android:dataExtractionRules="@xml/data_extraction_rules"
-        android:fullBackupContent="@xml/backup_rules"
+        android:allowBackup="false"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
-        android:theme="@style/Theme.StatelessPdfViewer">
+        android:theme="@style/Theme.StatelessPdfViewer"
+        tools:replace="android:allowBackup">
+
         <activity
             android:name=".MainActivity"
             android:exported="true"
+            android:noHistory="true"
+            android:excludeFromRecents="true"
             android:windowSoftInputMode="adjustResize">
+
+            <!-- ランチャーアイコンから起動した場合（ファイル未指定メッセージを表示） -->
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
-
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
+
+            <!-- ファイルマネージャなど外部アプリからPDFを開く -->
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:mimeType="application/pdf" />
+            </intent-filter>
+
+            <!-- content:// URI経由のPDF -->
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data
+                    android:scheme="content"
+                    android:mimeType="application/pdf" />
+            </intent-filter>
+
+            <!-- file:// URI経由のPDF -->
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data
+                    android:scheme="file"
+                    android:mimeType="application/pdf" />
+            </intent-filter>
+
         </activity>
     </application>
 

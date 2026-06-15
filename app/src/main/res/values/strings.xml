@@ -1,3 +1,13 @@
 <resources>
-    <string name="app_name">StatelessPdfViewer</string>
+    <string name="app_name">PDF Viewer</string>
+    <string name="search">テキスト検索</string>
+    <string name="search_hint">検索キーワードを入力…</string>
+    <string name="prev_result">前の結果</string>
+    <string name="next_result">次の結果</string>
+    <string name="no_results">見つかりません</string>
+    <string name="searching">検索中…</string>
+    <string name="result_format">%1$d / %2$d ページ</string>
+    <string name="error_no_pdf">PDFファイルが指定されていません。\nファイルマネージャーからPDFを開いてください。</string>
+    <string name="error_open_failed">PDFを開けませんでした</string>
+    <string name="page_count_format">%d ページ</string>
 </resources>
