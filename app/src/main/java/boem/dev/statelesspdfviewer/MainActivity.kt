@@ -55,8 +55,10 @@ class MainActivity : AppCompatActivity() {
         binding.pdfRecyclerView.apply {
             layoutManager = LinearLayoutManager(this@MainActivity)
             adapter = pageAdapter
-            // 横スクロール禁止（LinearLayoutManagerが縦方向なので水平スクロールは発生しない）
             isNestedScrollingEnabled = false
+            clipToPadding = false
+            val bottomPad = resources.displayMetrics.heightPixels / 3
+            setPadding(0, 0, 0, bottomPad)
         }
     }
 
