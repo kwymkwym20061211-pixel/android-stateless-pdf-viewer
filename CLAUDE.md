@@ -109,14 +109,5 @@ RecyclerViewの下部に `画面高さ / 3` のpaddingを追加（`clipToPadding
 
 ## 次回接続時の手順
 
-```powershell
-# Windows（管理者不要）
-adb kill-server
-usbipd attach --wsl --busid 1-3
-```
-
-```bash
-# WSL
-adb devices
-# → デバイスが表示されれば完了
-```
+1. USBでスマホと物理的に接続（スマホはデバッグモード）
+2. `~/adb_connect_usb.sh`を実行
