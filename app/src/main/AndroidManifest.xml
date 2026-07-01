@@ -13,8 +13,7 @@
         <activity
             android:name=".MainActivity"
             android:exported="true"
-            android:noHistory="true"
-            android:excludeFromRecents="true"
+            android:documentLaunchMode="intoExisting"
             android:windowSoftInputMode="adjustResize">
 
             <!-- ランチャーアイコンから起動した場合（ファイル未指定メッセージを表示） -->

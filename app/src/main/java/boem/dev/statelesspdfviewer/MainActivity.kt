@@ -331,11 +331,6 @@ class MainActivity : AppCompatActivity() {
 
     // ──────── ライフサイクル（ステートレス設計） ────────
 
-    override fun onPause() {
-        super.onPause()
-        purgeAllCaches()
-    }
-
     override fun onDestroy() {
         super.onDestroy()
         searchJob?.cancel()
@@ -344,6 +339,7 @@ class MainActivity : AppCompatActivity() {
         pdfRenderer = null
         fileDescriptor?.close()
         fileDescriptor = null
+        purgeAllCaches()
     }
 
     private fun purgeAllCaches() {

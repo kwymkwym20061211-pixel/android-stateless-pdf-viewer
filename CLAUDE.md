@@ -93,12 +93,20 @@ RecyclerViewの下部に `画面高さ / 3` のpaddingを追加（`clipToPadding
 `AndroidManifest.xml` に `ACTION_VIEW` + `application/pdf` のintent-filterを設定済み。
 ファイルマネージャーなどからPDFを選ぶとこのアプリで開ける。
 
+### タスク管理（マルチウィンドウ）
+
+- `android:documentLaunchMode="intoExisting"` によりPDFごとに別タスクとして扱われる
+  - ファイルマネージャーから新しいPDFを開く → 新しいタスク（ウィンドウ）を作成し、既存タスクは残す
+  - 同じPDFを再度開く → 既存タスクを前面に呼び出す（重複タスクは作らない）
+- Homeボタン・他アプリへの切り替えではタスクを破棄しない（タスク一覧に残り続け、開いていたページからそのまま再開できる）
+  - そのため `android:noHistory` / `android:excludeFromRecents` は付与していない
+  - 戻るボタンでルートActivityがfinishした場合は、Android標準の挙動としてタスクは自動的に一覧から消える
+
 ### ステートレス設計の実装箇所
 
-- `android:noHistory="true"` / `android:excludeFromRecents="true"` でセッション履歴を残さない
 - `android:allowBackup="false"` でバックアップ無効
-- `onPause()` で `cacheDir` / `externalCacheDir` を全削除
-- `onDestroy()` で `PdfRenderer` と `ParcelFileDescriptor` をクローズ
+- `onDestroy()`（戻るボタン等でActivityが本当に終了するタイミング）で `PdfRenderer` / `ParcelFileDescriptor` をクローズし、`cacheDir` / `externalCacheDir` を全削除
+  - Homeボタン等での一時退避（`onPause`/`onStop`）ではキャッシュを消さない（pdfbox-androidの内部リソースキャッシュを壊さないため）
 - `SharedPreferences` は一切使用しない
 
 ### 既知の制限
